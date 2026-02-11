@@ -17,7 +17,7 @@ CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     table_id INTEGER REFERENCES tables(id),
     order_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) NOT NULL -- 'received', 'preparing', 'ready', 'paid' [cite: 419, 420, 421, 422]
+    status VARCHAR(20) NOT NULL -- 'received', 'preparing', 'ready', 'paid'
 );
 
 -- Create order_details to store items and quantities for each order
