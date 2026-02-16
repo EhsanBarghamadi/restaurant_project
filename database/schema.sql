@@ -25,7 +25,8 @@ CREATE TABLE waiter_table(
 CREATE TABLE menu_items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0)
+    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+    portions_left INTEGER NOT NULL CHECK (portions_left > 0)
 );
 
 -- Create orders table to link a table to a specific order session
@@ -34,7 +35,7 @@ CREATE TABLE orders (
     table_id INTEGER REFERENCES tables(id),
     order_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) NOT NULL
-        CHECK (status IN ('received', 'preparing', 'ready', 'paid'))
+        CHECK (status IN ('received','cancelled', 'preparing', 'ready', 'paid'))
 );
 
 -- Create order_details to store items and quantities for each order
