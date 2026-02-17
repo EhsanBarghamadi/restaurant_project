@@ -1,4 +1,11 @@
 import psycopg2
+import logging
+
+logging.basicConfig(
+    filename='database.log',
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 class DatabaseManager():
     """
@@ -31,15 +38,17 @@ class DatabaseManager():
                 host=self.host_db,
                 port=self.port_db
             )
+            logging.info("Connection to database was successful.")
             return True, conn
-        except Exception as error:
-            return False, error
+        except Exception as er:
+            logging.error(er)
+            return False, er
 
     def query_tool(self, query, params=None, fetch=False):
         result, conn = self.connect()
         if not result:
+            logging.error(f"Connection Error: {conn}")
             return False, f"Connection Error: {conn}"
-        
         try:
             with conn.cursor() as cur:
                 cur.execute(query, params)
@@ -51,7 +60,9 @@ class DatabaseManager():
 
         except Exception as error:
             conn.rollback()
+            logging.error(error)
             return False, f"Query Error: {error}"
+        
         finally:
             conn.close()
 
@@ -66,5 +77,6 @@ class DatabaseManager():
                 return False
             
         except Exception as error:
+            logging.error(f"Massage Error: {error}")
             return False, f"Massage Error: {error}"
 
