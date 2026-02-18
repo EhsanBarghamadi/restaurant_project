@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
+import os
 import psycopg2
 import logging
+load_dotenv()
 
 logging.basicConfig(
     filename='database.log',
@@ -13,36 +16,44 @@ class DatabaseManager():
     Supports query execution, data fetching, and SQL script running.
     """
     
-    def __init__(self, user_db, pass_db, host_db='127.0.0.1', port_db='5432'):
-        self.NAME_DB = 'restarant_db'
-        self.user_db = user_db
-        self.__pass_db = pass_db
-        self.host_db = host_db
-        self.port_db = port_db
+    def __init__(self):
+            try:
+                check_list = [os.getenv("DB_NAME"), os.getenv("DB_USERNAME"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT")]
+                if None in check_list:
+                    logging.error("Problem connecting to database and .env file")
+                    self.check = False
+                else:
+                    self.DB_NAME = os.getenv("DB_NAME")
+                    self.DB_USERNAME = os.getenv("DB_USERNAME")
+                    self.__DB_PASSWORD = os.getenv("DB_PASSWORD")
+                    self.DB_HOST = os.getenv("DB_HOST")
+                    self.DB_PORT = os.getenv("DB_PORT")
+                    self.check = True
+            except ValueError as error:
+                logging.error(f"The database input values ​​are invalid.\nError: {error}")
+                raise ValueError
 
     @property
-    def pass_db(self):
+    def DB_PASSWORD(self):
         print("Unable to view password")
         return None
-
-    @pass_db.setter
-    def pass_db(self, value):
-        self.__pass_db = value
+    
+    @DB_PASSWORD.setter
+    def DB_PASSWORD(self, value):
+        self.__DB_PASSWORD = value
 
     def connect(self) -> tuple[bool , object | str]:
-        try:
-            conn = psycopg2.connect(
-                database=self.NAME_DB,
-                user=self.user_db,
-                password=self.__pass_db,
-                host=self.host_db,
-                port=self.port_db
-            )
-            logging.info("Connection to database was successful.")
-            return True, conn
-        except Exception as er:
-            logging.error(er)
-            return False, er
+        if not self.check:
+            return False, "Problem connecting to the database"
+        conn = psycopg2.connect(
+            database=self.DB_NAME,
+            user=self.DB_USERNAME,
+            password=self.__DB_PASSWORD,
+            host=self.DB_HOST,
+            port=self.DB_PORT
+        )
+        logging.info("Connection to database was successful.")
+        return True, conn
 
     def query_tool(self, query, params=None, fetch=False):
         result, conn = self.connect()
@@ -70,13 +81,13 @@ class DatabaseManager():
         try:
             with open(file_script , "r", encoding="utf-8") as file:
                 scripts = file.read()
-            result, massage = self.query_tool(scripts)
+            result, message = self.query_tool(scripts)
             if result:
                 return True
             else:
                 return False
             
         except Exception as error:
-            logging.error(f"Massage Error: {error}")
-            return False, f"Massage Error: {error}"
+            logging.error(f"Message Error: {error}")
+            return False, f"Message Error: {error}"
 
