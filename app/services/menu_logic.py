@@ -1,4 +1,4 @@
-from utils.db_handler import get_connection,manager_connection
+from app.utils.db_handler import get_connection,manager_connection
 
 @manager_connection
 def add_menu_item(cur, name:str, price:float) -> tuple[bool, str]:
