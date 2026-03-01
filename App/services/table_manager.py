@@ -18,6 +18,17 @@ class TableManager():
             return True, Table(table[0], table[1], table[2])
         return False, None
     
+    def get_table_by_id(self, table_id:int) -> tuple[bool, Table | str]:
+        query = """
+                SELECT id, table_number, status FROM tables
+                WHERE id = %s
+                """
+        res, data = self.db.query_tool(query, params=(table_id,), fetch_one=True)
+        if res and data:
+            table_obj = Table(data[0], data[1], data[2])
+            return True, table_obj
+        return False, "Database error during insertion"
+    
     def add_table(self, table_number:int) -> tuple[bool, str]:
         res, obj = self.existence_table(table_number)
         if not res:
@@ -48,14 +59,16 @@ class TableManager():
                 return False, "Database error during insertion"
         return False, f"Table number {table_number} does not exist."
     
-    def get_all_tables(self) -> tuple[bool, Table | str]:
+    def get_all_tables(self) -> tuple[bool, list[Table] | str]:
         query = """
                 SELECT id, table_number, status FROM tables
                 """
         res, data = self.db.query_tool(query, fetch_all=True)
-        if res and data:
-            tables = [Table(row[0], row[1], row[2]) for row in data]
-            return True, tables
+        if res:
+            if data:
+                tables = [Table(row[0], row[1], row[2]) for row in data]
+                return True, tables
+            return False, "Tables does not exist"
         return False, "Database error during insertion"
 
     def get_tables_by_status(self, status: TableStatus) -> tuple[bool, list[Table] | str]:
@@ -65,20 +78,12 @@ class TableManager():
                 """
         res, data = self.db.query_tool(query, params=(status.value,), fetch_all=True)
         if res:
-            tables = [Table(row[0], row[1], row[2]) for row in data]
-            return True, tables
+            if data:
+                tables = [Table(row[0], row[1], row[2]) for row in data]
+                return True, tables
+            return False, f"Tables {status.value} does not exist"
         return False, "Database error during insertion"
     
-    def get_table_by_id(self, table_id:int) -> tuple[bool, Table | str]:
-        query = """
-                SELECT id, table_number, status FROM tables
-                WHERE id = %s
-                """
-        res, data = self.db.query_tool(query, params=(table_id,), fetch_one=True)
-        if res and data:
-            table_obj = Table(data[0], data[1], data[2])
-            return True, table_obj
-        return False, "Database error during insertion"
     
     def delete_table(self, table_number:int) -> tuple[bool, str]:
         res_exists, obj = self.existence_table(table_number)

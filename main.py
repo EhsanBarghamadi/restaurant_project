@@ -1,6 +1,8 @@
 from app.database.database_manager import DatabaseManager, SuperDatabaseManager
 from app.services.user_manager import UserManager
 from app.services.table_manager import TableManager
+from app.services.menu_manager import MenuManager
+from app.models.table import TableStatus
 from app.models.user import UserRoles
 from dotenv import load_dotenv
 import os
@@ -99,9 +101,88 @@ def remove_assign_tables_all_waiter(us_manager: UserManager, ta_manager: TableMa
     res, info = us_manager.remove_table_from_waiter(username, obj.id)
     print(info)
     input("\nPress Enter to return...")
-    
 
-def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager):
+def show_all_tables(ta_manager: TableManager):
+    result , info = ta_manager.get_all_tables()
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    for item in info:
+        print(f"ID: {item.id}, Table Number: {item.table_number}, Status: {item.status.value}")
+    input("\nPress Enter to return...")
+
+def show_tables_by_status(ta_manager: TableManager):
+    status = get_valid_choice(["available", "occupied"], "Please select a status tables (available, occupied): ")
+    status_obj = TableStatus(status)
+    result, info = ta_manager.get_tables_by_status(status_obj)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    for item in info:
+        print(f"ID: {item.id}, Table Number: {item.table_number}, Status: {item.status.value}")
+    input("\nPress Enter to return...")
+
+def add_table(ta_manager: TableManager):
+    table_number = get_input(int, "Please enter new table number: ")
+    res, text = ta_manager.add_table(table_number)
+    print(text)
+    input("\nPress Enter to return...")
+    
+def change_table_status(ta_manager: TableManager):
+    table_number = get_input(int, "Please enter table number: ")
+    new_status = get_valid_choice(["available", "occupied"], "Please select a status tables (available, occupied): ")
+    status_obj = TableStatus(new_status)
+    result, info = ta_manager.change_status_table(table_number, status_obj)
+    print(info)
+    input("\nPress Enter to return...")
+
+def delete_table(ta_manager: TableManager):
+    table_number = get_input(int, "Please enter table number: ")
+    result, info = ta_manager.delete_table(table_number)
+    print(info)
+    input("\nPress Enter to return...")
+
+def show_all_items(me_manager: MenuManager):
+    result, data = me_manager.get_all_items()
+    if not result:
+        print(data)
+        input("\nPress Enter to return...")
+        return
+    for item in data:
+        print(f"ID: {item.id} Name: {item.name} Price: {item.price} Portions Left: {item.portions_left}")
+        input("\nPress Enter to return...")
+
+def add_item(me_manager: MenuManager):
+    name = get_input(str, "Please enter the item name: ")
+    price = get_input(float, "Please enter the item price: ")
+    portions_left = get_input(int, "Please enter the porsions left: ")
+    result, info = me_manager.add_item(name, price, portions_left)
+    print(info)
+    input("\nPress Enter to return...")
+
+def change_price_item(me_manager: MenuManager):
+    name = get_input(str, "Please enter the item name: ")
+    new_price = get_input(float, "Please enter the new price: ")
+    result, info = me_manager.change_price(name, new_price)
+    print(info)
+    input("\nPress Enter to return...")
+
+def change_portions_left_item(me_manager: MenuManager):
+    name = get_input(str, "Please enter the item name: ")
+    new_portions_left = get_input(int, "Please enter the new porsions left: ")
+    result, info = me_manager.change_portions_left(name, new_portions_left)
+    print(info)
+    input("\nPress Enter to return...")
+
+def delete_item(me_manager: MenuManager):
+    name = get_input(str, "Please enter the item name: ")
+    result, info = me_manager.delete_item(name)
+    print(info)
+    input("\nPress Enter to return...")
+
+def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager, me_manager: MenuManager):
     actions = {
     "1": ("Add a new username", lambda: user_registration(us_manager)),
     "2": ("Delete a username", lambda: delete_username(us_manager)),
@@ -109,6 +190,16 @@ def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager)
     "4": ("View tables assigned to all waiters", lambda: show_assign_tables_all_waiter(us_manager)),
     "5": ("Add Assign table to waiter", lambda: add_assign_table_to_waiter(us_manager, ta_manager)),
     "6": ("Remove Assign table to waiter", lambda: remove_assign_tables_all_waiter(us_manager, ta_manager)),
+    "7": ("View all the tables", lambda: show_all_tables(ta_manager)),
+    "8": ("View all the tables by status", lambda: show_tables_by_status(ta_manager)),
+    "9": ("Add table", lambda: add_table(ta_manager)),
+    "10": ("Change table status", lambda: change_table_status(ta_manager)),
+    "11": ("Remove a table", lambda: delete_table(ta_manager)),
+    "12": ("View all item menu", lambda: show_all_items(me_manager)),
+    "13": ("Add item", lambda: add_item(me_manager)),
+    "14": ("Change price iteme", lambda: change_price_item(me_manager)),
+    "15": ("Change portions left iteme", lambda: change_portions_left_item(me_manager)),
+    "16": ("Remove a item", lambda: delete_item(me_manager)),
     }
     while True:
         print("+-"*20)
@@ -167,6 +258,7 @@ def main_menu():
     db_manager = DatabaseManager()
     us_manager = UserManager(db_manager)
     ta_manager = TableManager(db_manager)
+    me_manager = MenuManager(db_manager)
     logged_in, user_obj = login(db_manager, us_manager)
     if not logged_in:
         return
@@ -191,7 +283,7 @@ def main_menu():
                     input("\nPress Enter to continue...")
                     continue
                 if user_obj.roles.value == "admin":
-                    restaurant_menu(user_obj, us_manager, ta_manager)
+                    restaurant_menu(user_obj, us_manager, ta_manager, me_manager)
                 else:
                     print("You do not have access to this section.")
                     input("\nPress Enter to continue...")

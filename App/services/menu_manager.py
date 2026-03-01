@@ -22,7 +22,7 @@ class MenuManager():
             return False, None
         return False, "Database error during insertion"
     
-    def add_item(self, name:str, price:float, portions_left:int):
+    def add_item(self, name:str, price:float, portions_left:int) -> tuple[bool, str]:
         name = name.title()
         result, obj = self.existence_item(name)
         if result:
@@ -91,6 +91,8 @@ class MenuManager():
                 FROM menu_items ORDER BY name"""
         res, data = self.db.query_tool(query, fetch_all=True)
         if res:
-            items = [MenuItems(row[0], row[1], row[2], row[3]) for row in data] if data else []
-            return True, items
+            if data:
+                items = [MenuItems(row[0], row[1], row[2], row[3]) for row in data] if data else []
+                return True, items
+            return False, "Items don 't exist in menu"
         return False, "Database error while fetching menu."
