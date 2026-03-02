@@ -113,7 +113,7 @@ class OrderManager():
         return False, "Database error during status update."  
         
     def remove_item_from_order(self, order_obj: Orders, item_name: str) -> tuple[bool, str]:
-        find_item = [order_item for order_item in order_obj.items if order_item.menu_item.name == item_name]
+        find_item = [order_item for order_item in order_obj.items if order_item.menu_item.name == item_name.title()]
         if not find_item:
             return False, f"{item_name} item not found in order ID {order_obj.id}"
         order_item_obj = find_item[0]
@@ -128,7 +128,7 @@ class OrderManager():
         return False, "Database error during item deletion."
     
     def update_item_quantity(self, order_obj: Orders, item_name: str, new_quantity: int) -> tuple[bool, str]:
-        find_item = [order_item for order_item in order_obj.items if order_item.menu_item.name == item_name]
+        find_item = [order_item for order_item in order_obj.items if order_item.menu_item.name == item_name.title()]
         if not find_item:
             return False, f"{item_name} item not found in order ID {order_obj.id}"
         order_item_obj = find_item[0]

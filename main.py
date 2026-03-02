@@ -2,7 +2,10 @@ from app.database.database_manager import DatabaseManager, SuperDatabaseManager
 from app.services.user_manager import UserManager
 from app.services.table_manager import TableManager
 from app.services.menu_manager import MenuManager
+from app.services.order_manager import OrderManager
+from app.models.user import Users
 from app.models.table import TableStatus
+from app.models.orders import OrderStatus
 from app.models.user import UserRoles
 from dotenv import load_dotenv
 import os
@@ -152,7 +155,7 @@ def show_all_items(me_manager: MenuManager):
         return
     for item in data:
         print(f"ID: {item.id} Name: {item.name} Price: {item.price} Portions Left: {item.portions_left}")
-        input("\nPress Enter to return...")
+    input("\nPress Enter to return...")
 
 def add_item(me_manager: MenuManager):
     name = get_input(str, "Please enter the item name: ")
@@ -182,7 +185,108 @@ def delete_item(me_manager: MenuManager):
     print(info)
     input("\nPress Enter to return...")
 
-def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager, me_manager: MenuManager):
+def show_waiter_orders(user_obj: Users, or_manager: OrderManager):
+    result, info = or_manager.get_waiter_orders(user_obj.username)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    if not info:
+        print("No order has been registered to you today.")
+        input("\nPress Enter to return...")
+        return
+    for order_obj in info:
+        print(f"ID: {order_obj.id} Table: {order_obj.table.table_number} Status: {order_obj.status.value} Time: {order_obj.order_time}")
+        for orderitem_obj in order_obj.items:
+            print(f"|___ {orderitem_obj.quantity}x {orderitem_obj.menu_item.name} | Price: {orderitem_obj.menu_item.price}  (portions left: {orderitem_obj.menu_item.portions_left})")
+        print("--"*20)
+    input("\nPress Enter to return...")
+    
+
+def add_Order(user_obj: Users, or_manager: OrderManager):
+    username = get_input(str, "Please enter a username: ")
+    table_number = get_input(int, "Please enter the table number: ")
+    result, data = or_manager.add_order(username, table_number)
+    if not result:
+        print(data)
+        input("\nPress Enter to return...")
+        return
+    flag = True
+    while flag:
+        name_item = get_input(str, "Please enter the item name: ")
+        quantity_item = get_input(int, "Please enter the quantity item: ")
+        result, info = or_manager.add_item_to_order(data, name_item, quantity_item)
+        print(info)
+        choi = input("do you add another item?[Y/N]").upper()
+        if choi in ["N", "NO", "NA", "NAKHER"]:
+            flag = False
+            input("\nPress Enter to return...")
+            return
+
+def change_order_status(user_obj: Users, or_manager: OrderManager):
+    order_id = get_input(int, "Please enter the order id: ")
+    result, info = or_manager.existence_order(order_id)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    status = get_valid_choice(['received','cancelled', 'preparing', 'ready', 'paid'], "Please enter the order id (received, cancelled, preparing, ready, paid): ")
+    new_status = OrderStatus(status)
+    resul, text = or_manager.update_order_status(info, new_status)
+    print(text)
+    input("\nPress Enter to return...")
+
+def add_item_from_order(or_manager: OrderManager):
+    order_id = get_input(int, "Please enter the order id: ")
+    result, info = or_manager.existence_order(order_id)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    name_item = get_input(str, "Please enter the item name: ")
+    quantity_item = get_input(int, "Please enter the quantity item: ")
+    result, text = or_manager.add_item_to_order(info, name_item, quantity_item)
+    print(text)
+    input("\nPress Enter to return...")
+
+def update_item_quantity_from_order(or_manager: OrderManager):
+    order_id = get_input(int, "Please enter the order id: ")
+    result, info = or_manager.existence_order(order_id)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    name_item = get_input(str, "Please enter the item name: ")
+    new_quantity = get_input(int, "Please enter the new quantity item: ")
+    resul, text = or_manager.update_item_quantity(info, name_item, new_quantity)
+    print(text)
+    input("\nPress Enter to return...")
+
+def remove_item_from_order(or_manager: OrderManager):
+    order_id = get_input(int, "Please enter the order id: ")
+    result, info = or_manager.existence_order(order_id)
+    if not result:
+        print(info)
+        input("\nPress Enter to return...")
+        return
+    name_item = get_input(str, "Please enter the item name: ")
+    result, text = or_manager.remove_item_from_order(info, name_item)
+    print(text)
+    input("\nPress Enter to return...")
+
+def export_invoice_from_order(or_manager: OrderManager):
+    order_id = get_input(int, "Please enter the order id: ")
+    result, order_obj = or_manager.existence_order(order_id)
+    if not result:
+        print(order_obj)
+    print(f"ID: {order_obj.id} Table: {order_obj.table.table_number} Status: {order_obj.status.value} Time: {order_obj.order_time}")
+    for orderitem_obj in order_obj.items:
+        print(f"|___ {orderitem_obj.quantity}x {orderitem_obj.menu_item.name} | Price: {orderitem_obj.menu_item.price}  (portions left: {orderitem_obj.menu_item.portions_left})")
+    print("+-"*20)
+    print(f"Total amount>>> {or_manager.get_invoice(order_obj)} <<<")
+    input("\nPress Enter to return...")
+
+def restaurant_menu(us_manager: UserManager, ta_manager: TableManager, me_manager: MenuManager):
     actions = {
     "1": ("Add a new username", lambda: user_registration(us_manager)),
     "2": ("Delete a username", lambda: delete_username(us_manager)),
@@ -200,6 +304,7 @@ def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager,
     "14": ("Change price iteme", lambda: change_price_item(me_manager)),
     "15": ("Change portions left iteme", lambda: change_portions_left_item(me_manager)),
     "16": ("Remove a item", lambda: delete_item(me_manager)),
+    "0": ("Exit",""),
     }
     while True:
         print("+-"*20)
@@ -218,9 +323,37 @@ def restaurant_menu(user_obj, us_manager: UserManager, ta_manager: TableManager,
             action_fun()
         else:
             print("Invalid option")
-    ...
-def waiter_menu():
-    ...
+
+def waiter_menu(user_obj: Users, or_manager: OrderManager):
+    actions = {
+        "1": ("Show all orders", lambda: show_waiter_orders(user_obj, or_manager)),
+        "2": ("Add a new order", lambda: add_Order(user_obj, or_manager)),
+        "3": ("Change order status", lambda: change_order_status(user_obj, or_manager)),
+        "4": ("Add item from order", lambda: add_item_from_order(or_manager)),
+        "5": ("Update item quantity from order", lambda: update_item_quantity_from_order(or_manager)),
+        "6": ("Remove item from order", lambda: remove_item_from_order(or_manager)),
+        "7": ("Export invoice order", lambda: export_invoice_from_order(or_manager)),
+        "0": ("Exit", "")
+    }
+
+    while True:
+        print("-+"*20)
+        for key, (title, _) in actions.items():
+            print(f"{key}. {title}")
+        print("-+"*20)
+        choice = input("Select: ")
+
+        if choice == "0":
+            break
+
+        action_data = actions.get(choice)
+
+        if action_data:
+            _,action_fun = action_data
+            action_fun()
+        else:
+            print("Invalid option")
+
 def database_menu(db_manager: DatabaseManager):
     sdb_manager = SuperDatabaseManager()
     re, info = sdb_manager.create_database()
@@ -259,6 +392,7 @@ def main_menu():
     us_manager = UserManager(db_manager)
     ta_manager = TableManager(db_manager)
     me_manager = MenuManager(db_manager)
+    or_manager = OrderManager(db_manager, us_manager,me_manager,ta_manager)
     logged_in, user_obj = login(db_manager, us_manager)
     if not logged_in:
         return
@@ -275,7 +409,9 @@ def main_menu():
         print()
 
         choice = input("Select: ")
-
+        print()
+        
+        
         match choice:
             case "1":
                 if not result:
@@ -283,7 +419,7 @@ def main_menu():
                     input("\nPress Enter to continue...")
                     continue
                 if user_obj.roles.value == "admin":
-                    restaurant_menu(user_obj, us_manager, ta_manager, me_manager)
+                    restaurant_menu(us_manager, ta_manager, me_manager)
                 else:
                     print("You do not have access to this section.")
                     input("\nPress Enter to continue...")
@@ -293,13 +429,17 @@ def main_menu():
                     print("First, create the database in option 3.")
                     input("\nPress Enter to continue...")
                     continue
-                waiter_menu(user_obj)
+                waiter_menu(user_obj, or_manager)
 
             case "3":
                 if user_obj.roles.value == "admin" and not result:
                     database_menu(db_manager)
+                print("Database , Tables , and Trigger are already built")
+                input("\nPress Enter to continue...")
 
             case "0":
+                print("I don 't say goodbye because i like to see you again .")
+                input("...")
                 break
 
             case _:
