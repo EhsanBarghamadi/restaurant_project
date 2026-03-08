@@ -83,7 +83,7 @@ class MenuManager():
         res, data = self.db.query_tool(query, params=(obj.id,))
         if res:
             return True, f"{obj.name} item was deleted."
-        return False, "Database error during insertion"
+        return False, "Database error during deleted"
     
     def get_all_items(self) -> tuple[bool, list[MenuItems] | str]:
         query = """
