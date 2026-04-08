@@ -1,37 +1,96 @@
-Markdown
 # 🍔Restaurant Management System (CLI)
 
-A robust, command-line interface (CLI) application for managing restaurant operations, built with **Python** and **PostgreSQL**.
+A simple, internal restaurant management application built with **Python** With class-based and **PostgreSQL**. Designed for restaurant managers and waiters. 
 
-This project demonstrates core programming concepts including database connectivity (CRUD operations), input validation, decorators, and modular function design.
 
-## 🚀 Features
 
-* **Database Integration:** Uses `psycopg2` to communicate with a PostgreSQL database.
-* **Robust Input Validation:** Prevents crashes by validating user inputs (integers, floats, strings) and handling exceptions.
-* **Menu Management:** Add new items, update prices, and view the full menu.
-* **Table Management:** Add/remove tables and update their status (e.g., available, occupied).
-* **Order System:** * Create new orders for specific tables.
-    * Add multiple items to an active order.
-    * Update order status (received -> preparing -> paid).
-* **Reporting:** Generate daily sales reports based on paid orders.
+## 🔥 Features
+### 🚀 This program automatically creates the database and tables — so you don't need to know SQL or write any queries.😎
+### 🪑 Table Management
+- Add / remove tables
+- Update table status (available / occupied)
+- View all tables in a clean formatted view
 
-## 🛠️ Technologies Used
+### 📋 Menu Management
+- Full CRUD operations for menu items
+- Add new dishes 🍕
+- Edit prices
+- Remove outdated items
 
-* Python 3.x
-* PostgreSQL
-* Psycopg2 (Database Adapter)
+### 🛒 Order Handling
+- Create new orders
+- Add items with quantities
+- Update order status (received → paid)
+- View detailed order breakdown
 
-## 📋 Prerequisites
+### 📊 Reporting
+- Daily sales summary
+- Subtotals and total revenue
+- List of unpaid orders
 
-Before running the application, ensure you have the following installed:
+### ✅ Input Validation
+- Prevents invalid data (e.g., negative prices, empty inputs)
 
-1.  **Python 3.x**
-2.  **PostgreSQL Database**
-3.  **Psycopg2 library:**
-    ```bash
-    pip install psycopg2
-    ```
+### 📝 Logging
+- Errors stored in `app.log` for debugging
+
+---
+
+## 🛠️ Prerequisites
+
+- Python 3.8+
+- PostgreSQL (local or cloud)
+- Required libraries:
+  - psycopg2
+  - tabulate
+  - python-dotenv
+
+---
+
+## 🚀 Installation
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/restaurant-management-system.git
+cd restaurant-management-system
+```
+
+### 2️⃣ Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate:
+
+Linux / macOS:
+```bash
+source venv/bin/activate
+```
+
+Windows:
+```bash
+venv\Scripts\activate
+```
+
+### 3️⃣ Install Dependencies
+
+```bash
+pip install psycopg2 tabulate python-dotenv
+```
+
+### 4️⃣ Configure Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```env
+DB_NAME=restaurant_db
+DB_USERNAME=youruser
+DB_PASSWORD=yourpass
+DB_HOST=localhost
+DB_PORT=5432
+```
 
 ## ⚙️ Database Setup
 
